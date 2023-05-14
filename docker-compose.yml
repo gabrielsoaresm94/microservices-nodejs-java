@@ -1,0 +1,63 @@
+version: "3.4"
+
+services:
+  auth-db:
+    image: "postgres:12"
+    hostname: auth-db-postgres
+    restart: "always"
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: "${AUTH_DB_PASSWORD}"
+      POSTGRES_USER: "${AUTH_DB_USER}"
+  product-db:
+    image: "postgres:12"
+    hostname: product-db-postgres
+    restart: "always"
+    ports:
+      - "5433:5432"
+    volumes:
+      - product-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: "${PRODUCT_DB_PASSWORD}"
+      POSTGRES_USER: "${PRODUCT_DB_USER}"
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_DB_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_DB_PASSWORD}"
+    networks:
+      - mongo-compose-network
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - mongo
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_USERNAME}"
+      ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_PASSWORD}"
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_EXPRESS_USERNAME}:${MONGO_EXPRESS_PASSWORD}@mongo:27017/"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_EXPRESS_ADMINUSERNAME}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_EXPRESS_ADMINPASSWORD}"
+    links:
+      - mongo
+    networks:
+      - mongo-compose-network
+volumes:
+  auth-db:
+  product-db:
+  mongo:
+  mongo-express:
+networks: 
+  mongo-compose-network:
+    driver: bridge
